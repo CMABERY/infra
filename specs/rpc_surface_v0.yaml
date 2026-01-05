@@ -1,0 +1,626 @@
+spec: CodexLike-RPC
+version: 0.1.0
+status: mvp
+purpose: Transport API surface for a transaction-first coding agent runtime (CLI backend) and a UI client.
+transports:
+- name: stdio-ndjson
+  description: JSON-RPC 2.0 messages serialized as UTF-8 JSON objects delimited by newlines.
+  framing:
+    type: newline-delimited-json
+    encoding: utf-8
+  limits:
+    recommended_max_message_bytes: 8388608
+- name: socket-length-prefixed
+  description: JSON messages framed with a 4-byte little-endian length prefix followed by UTF-8 JSON.
+  framing:
+    type: u32le-length-prefix
+    encoding: utf-8
+  limits:
+    max_frame_bytes: 33554432
+    max_buffer_bytes: 67108864
+envelope:
+  style: json-rpc-2.0
+  request:
+    required:
+    - jsonrpc
+    - id
+    - method
+    properties:
+      jsonrpc:
+        const: '2.0'
+      id:
+        type:
+        - string
+        - integer
+      method:
+        type: string
+      params:
+        type:
+        - object
+        - array
+        - 'null'
+  response:
+    required:
+    - jsonrpc
+    - id
+    one_of:
+    - result
+    - error
+    properties:
+      jsonrpc:
+        const: '2.0'
+      id:
+        type:
+        - string
+        - integer
+      result:
+        type:
+        - object
+        - array
+        - string
+        - number
+        - boolean
+        - 'null'
+      error:
+        type: object
+        required:
+        - code
+        - message
+        properties:
+          code:
+            type: integer
+          message:
+            type: string
+          data:
+            type:
+            - object
+            - array
+            - string
+            - number
+            - boolean
+            - 'null'
+  notification:
+    required:
+    - jsonrpc
+    - method
+    properties:
+      jsonrpc:
+        const: '2.0'
+      method:
+        type: string
+      params:
+        type:
+        - object
+        - array
+        - 'null'
+    notes: Notifications MUST NOT include an id. They are used for streaming events.
+  error_codes:
+    '-32700': Parse error
+    '-32600': Invalid Request
+    '-32601': Method not found
+    '-32602': Invalid params
+    '-32603': Internal error
+correlation_keys:
+  threadId: Stable identifier for a conversation thread (UI history + context).
+  turnId: Identifier for a single agent turn (one 'transactional' attempt).
+  transactionId: Identifier for the durable on-disk transaction ledger backing a turn.
+  itemId: Identifier for a typed turn item (plan, exec, fileChange, etc.).
+  approvalRequestId: Identifier for an approval request that must be decided by the client/user.
+types:
+  ThreadId:
+    type: string
+  TurnId:
+    type: string
+  TransactionId:
+    type: string
+  Cursor:
+    type:
+    - string
+    - 'null'
+  ISO8601Utc:
+    type: string
+    format: date-time
+  ContentBlock:
+    type: object
+    required:
+    - type
+    properties:
+      type:
+        enum:
+        - input_text
+        - input_file_ref
+        - input_uri_ref
+      text:
+        type: string
+      path:
+        type: string
+      uri:
+        type: string
+    additionalProperties: true
+  SandboxPolicy:
+    type: object
+    required:
+    - type
+    properties:
+      type:
+        enum:
+        - read-only
+        - workspace-write
+        - full/danger
+        - danger-full-access
+      writable_roots:
+        type: array
+        items:
+          type: string
+      network_access:
+        type: boolean
+    additionalProperties: true
+  ApprovalPolicy:
+    type: string
+    enum:
+    - untrusted
+    - on-request
+    - on-failure
+    - never
+  ModelConfig:
+    type: object
+    properties:
+      provider:
+        type: string
+      model:
+        type: string
+      effort:
+        type: string
+        enum:
+        - low
+        - medium
+        - high
+      summary:
+        type: string
+        enum:
+        - none
+        - auto
+    additionalProperties: true
+  EventRecord:
+    type: object
+    required:
+    - timestamp
+    - type
+    - payload
+    properties:
+      timestamp:
+        $ref: '#/types/ISO8601Utc'
+      type:
+        type: string
+      payload:
+        type: object
+    additionalProperties: true
+  TurnItem:
+    description: Typed turn item object. Must validate against turn_item_schema_v0.1.json.
+    external_schema: turn_item_schema_v0.1.json
+methods:
+- name: system/capabilities
+  kind: request
+  summary: Return protocol version and backend capabilities.
+  params:
+    type: object
+    properties:
+      protocolVersion:
+        type: string
+    additionalProperties: true
+  result:
+    type: object
+    required:
+    - protocolVersion
+    - methods
+    - limits
+    properties:
+      protocolVersion:
+        type: string
+      methods:
+        type: array
+        items:
+          type: string
+      limits:
+        type: object
+    additionalProperties: true
+  evidence: Designed for MVP; not directly observed in artifacts.
+- name: thread/list
+  kind: request
+  summary: List recent threads for UI history.
+  params:
+    type: object
+    properties:
+      limit:
+        type: integer
+        minimum: 1
+        maximum: 500
+      cursor:
+        $ref: '#/types/Cursor'
+      modelProviders:
+        type: array
+        items:
+          type: string
+    additionalProperties: true
+  result:
+    type: object
+    required:
+    - data
+    properties:
+      data:
+        type: array
+        items:
+          type: object
+          required:
+          - threadId
+          - preview
+          - updatedAt
+          properties:
+            threadId:
+              $ref: '#/types/ThreadId'
+            preview:
+              type: string
+            updatedAt:
+              $ref: '#/types/ISO8601Utc'
+            cursor:
+              $ref: '#/types/Cursor'
+          additionalProperties: true
+      nextCursor:
+        $ref: '#/types/Cursor'
+    additionalProperties: true
+  evidence: Observed method literal in extension bundle.
+- name: thread/start
+  kind: request
+  summary: Create a new thread (conversation) scoped to workspace roots and configuration policies.
+  params:
+    type: object
+    required:
+    - cwd
+    - roots
+    - config
+    properties:
+      cwd:
+        type: string
+      roots:
+        type: array
+        items:
+          type: string
+      config:
+        type: object
+        properties:
+          sandboxPolicy:
+            $ref: '#/types/SandboxPolicy'
+          approvalPolicy:
+            $ref: '#/types/ApprovalPolicy'
+          model:
+            $ref: '#/types/ModelConfig'
+        additionalProperties: true
+      metadata:
+        type: object
+    additionalProperties: true
+  result:
+    type: object
+    required:
+    - threadId
+    - createdAt
+    properties:
+      threadId:
+        $ref: '#/types/ThreadId'
+      createdAt:
+        $ref: '#/types/ISO8601Utc'
+      modelProvider:
+        type: string
+    additionalProperties: true
+  evidence: Observed method literal in extension bundle.
+- name: turn/start
+  kind: request
+  summary: Start an agent turn within a thread. Backend begins streaming notifications for events and turn items.
+  params:
+    type: object
+    required:
+    - threadId
+    - input
+    properties:
+      threadId:
+        $ref: '#/types/ThreadId'
+      input:
+        type: array
+        items:
+          $ref: '#/types/ContentBlock'
+      cwd:
+        type: string
+      config:
+        type: object
+        properties:
+          sandboxPolicy:
+            $ref: '#/types/SandboxPolicy'
+          approvalPolicy:
+            $ref: '#/types/ApprovalPolicy'
+          model:
+            $ref: '#/types/ModelConfig'
+        additionalProperties: true
+      clientContext:
+        type: object
+        description: Optional UI-supplied context (open files, selection, etc.)
+    additionalProperties: true
+  result:
+    type: object
+    required:
+    - turnId
+    - transactionId
+    - status
+    properties:
+      turnId:
+        $ref: '#/types/TurnId'
+      transactionId:
+        $ref: '#/types/TransactionId'
+      status:
+        type: string
+        enum:
+        - inProgress
+      rolloutPath:
+        type:
+        - string
+        - 'null'
+        description: Optional path to the on-disk rollout JSONL for this transaction.
+    additionalProperties: true
+  evidence: Designed for MVP; required by transaction-first architecture.
+- name: turn/get
+  kind: request
+  summary: Fetch current state of a turn (for polling or recovery).
+  params:
+    type: object
+    required:
+    - threadId
+    - turnId
+    properties:
+      threadId:
+        $ref: '#/types/ThreadId'
+      turnId:
+        $ref: '#/types/TurnId'
+    additionalProperties: true
+  result:
+    type: object
+    required:
+    - turnId
+    - status
+    - items
+    properties:
+      turnId:
+        $ref: '#/types/TurnId'
+      status:
+        type: string
+        enum:
+        - inProgress
+        - completed
+        - failed
+        - interrupted
+      items:
+        type: array
+        items:
+          $ref: '#/types/TurnItem'
+      diff:
+        type:
+        - string
+        - 'null'
+        description: Optional aggregate unified diff
+      error:
+        type:
+        - object
+        - 'null'
+    additionalProperties: true
+  evidence: Designed for MVP; optional but practical for UI recovery.
+- name: turn/interrupt
+  kind: request
+  summary: Interrupt a running turn. Backend should transition to interrupted and stop further actions.
+  params:
+    type: object
+    required:
+    - threadId
+    - turnId
+    properties:
+      threadId:
+        $ref: '#/types/ThreadId'
+      turnId:
+        $ref: '#/types/TurnId'
+    additionalProperties: true
+  result:
+    type: object
+    required:
+    - turnId
+    - status
+    properties:
+      turnId:
+        $ref: '#/types/TurnId'
+      status:
+        type: string
+        enum:
+        - interrupted
+    additionalProperties: true
+  evidence: Designed for MVP; matches lifecycle terminal 'interrupted'.
+- name: approval/respond
+  kind: request
+  summary: Approve or deny a pending approval request (commandExecution or fileChange).
+  params:
+    type: object
+    required:
+    - transactionId
+    - approvalRequestId
+    - decision
+    properties:
+      transactionId:
+        $ref: '#/types/TransactionId'
+      approvalRequestId:
+        type: string
+      decision:
+        type: string
+        enum:
+        - approve
+        - deny
+      note:
+        type:
+        - string
+        - 'null'
+    additionalProperties: true
+  result:
+    type: object
+    required:
+    - ok
+    properties:
+      ok:
+        type: boolean
+    additionalProperties: true
+  evidence: Designed for MVP; aligns with approval request/decision events.
+
+- name: transaction/list
+  kind: request
+  summary: List recent transactions from the on-disk ledger (resume support).
+  params:
+    type: object
+    properties:
+      limit:
+        type: integer
+        minimum: 1
+        maximum: 500
+    additionalProperties: true
+  result:
+    type: object
+    required:
+    - data
+    properties:
+      data:
+        type: array
+        items:
+          type: object
+          additionalProperties: true
+    additionalProperties: true
+
+- name: transaction/get
+  kind: request
+  summary: Return transaction metadata and pending approvals.
+  params:
+    type: object
+    required:
+    - transactionId
+    properties:
+      transactionId:
+        $ref: '#/types/TransactionId'
+    additionalProperties: true
+  result:
+    type: object
+    required:
+    - transaction
+    - pendingApprovals
+    properties:
+      transaction:
+        type: object
+        additionalProperties: true
+      pendingApprovals:
+        type: array
+        items:
+          type: object
+          additionalProperties: true
+    additionalProperties: true
+
+- name: transaction/resume
+  kind: request
+  summary: Alias of transaction/get (semantic intent is resume).
+  params:
+    type: object
+    required:
+    - transactionId
+    properties:
+      transactionId:
+        $ref: '#/types/TransactionId'
+    additionalProperties: true
+  result:
+    type: object
+    required:
+    - transaction
+    - pendingApprovals
+    properties:
+      transaction:
+        type: object
+        additionalProperties: true
+      pendingApprovals:
+        type: array
+        items:
+          type: object
+          additionalProperties: true
+    additionalProperties: true
+
+- name: apply/execute
+  kind: request
+  summary: Explicitly apply the latest proposal in a transaction (may request approvals).
+  params:
+    type: object
+    required:
+    - transactionId
+    properties:
+      transactionId:
+        $ref: '#/types/TransactionId'
+    additionalProperties: true
+  result:
+    type: object
+    required:
+    - ok
+    properties:
+      ok:
+        type: boolean
+      pendingApprovals:
+        type: array
+        items:
+          type: object
+          additionalProperties: true
+    additionalProperties: true
+
+- name: tx/close
+  kind: request
+  summary: Explicitly close a transaction without applying (or after completion).
+  params:
+    type: object
+    required:
+    - transactionId
+    properties:
+      transactionId:
+        $ref: '#/types/TransactionId'
+      status:
+        type: string
+        enum:
+        - completed
+        - interrupted
+        - failed
+    additionalProperties: true
+  result:
+    type: object
+    required:
+    - ok
+    properties:
+      ok:
+        type: boolean
+    additionalProperties: true
+notifications:
+- name: event
+  summary: Stream an event record to the client. Clients SHOULD persist these events into the transaction ledger.
+  params:
+    type: object
+    required:
+    - event
+    properties:
+      event:
+        $ref: '#/types/EventRecord'
+      threadId:
+        $ref: '#/types/ThreadId'
+      turnId:
+        $ref: '#/types/TurnId'
+      transactionId:
+        $ref: '#/types/TransactionId'
+    additionalProperties: true
+  notes:
+  - 'Recommended: use event.type values from transaction_event_types_v0.json.'
+  - For turn items, emit event.type='turn/item' and put the TurnItem object in event.payload.item.
+versioning:
+  protocolVersion: 0.1.0
+  compatibility: Backwards-compatible additions are allowed (new methods, new optional fields). Breaking changes require protocolVersion
+    bump.
+  negotiation: Client MAY call system/capabilities at startup and refuse if protocolVersion is incompatible.

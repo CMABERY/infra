@@ -1,0 +1,96 @@
+{
+  "version": "0",
+  "envelope": {
+    "required_keys": [
+      "timestamp",
+      "type",
+      "payload"
+    ]
+  },
+  "types": {
+    "tx/meta": {
+      "description": "Creates/declares a transaction and its governing policies.",
+      "payload_required": [
+        "transaction_id",
+        "workspace_roots",
+        "cwd",
+        "sandbox_policy",
+        "approval_policy"
+      ]
+    },
+    "tx/status": {
+      "description": "Records a transaction status transition (mutable pointers must be derivable from these).",
+      "payload_required": [
+        "transaction_id",
+        "from",
+        "to"
+      ]
+    },
+    "turn/start": {
+      "description": "Begins a new turn within a transaction.",
+      "payload_required": [
+        "transaction_id",
+        "turn_id",
+        "input"
+      ]
+    },
+    "turn/item": {
+      "description": "Emits a typed item belonging to a turn (plan, exec, patch, message...).",
+      "payload_required": [
+        "transaction_id",
+        "turn_id",
+        "item"
+      ]
+    },
+    "artifact/stored": {
+      "description": "Records that a content-addressed artifact was stored for provenance (inputs/outputs).",
+      "payload_required": [
+        "transaction_id",
+        "artifact_id",
+        "kind",
+        "path"
+      ]
+    },
+    "approval/request": {
+      "description": "Requests approval to execute a command or apply a patch.",
+      "payload_required": [
+        "transaction_id",
+        "turn_id",
+        "approval_request_id",
+        "item_id",
+        "kind"
+      ]
+    },
+    "approval/decision": {
+      "description": "Records an approval decision correlated to an approval request.",
+      "payload_required": [
+        "transaction_id",
+        "approval_request_id",
+        "decision"
+      ]
+    },
+    "apply/start": {
+      "description": "Begins applying one or more patches to the workspace.",
+      "payload_required": [
+        "transaction_id",
+        "apply_id",
+        "patch_ids"
+      ]
+    },
+    "apply/complete": {
+      "description": "Completes the apply step; records success/failure and any errors.",
+      "payload_required": [
+        "transaction_id",
+        "apply_id",
+        "success"
+      ]
+    },
+    "tx/close": {
+      "description": "Marks the transaction terminal (completed/failed/interrupted) with optional summary.",
+      "payload_required": [
+        "transaction_id",
+        "status"
+      ]
+    }
+  }
+}

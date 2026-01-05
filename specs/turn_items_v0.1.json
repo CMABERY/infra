@@ -1,0 +1,284 @@
+{
+  "name": "Turn Item Vocabulary",
+  "version": "0.1",
+  "generated_at": "2026-01-05T14:06:28.053507Z",
+  "common": {
+    "required": [
+      "id",
+      "type"
+    ],
+    "optional": [
+      "op",
+      "status",
+      "created_at",
+      "updated_at",
+      "seq",
+      "parent_id",
+      "metadata"
+    ],
+    "fields": {
+      "id": {
+        "type": "string",
+        "description": "Unique identifier for this item within a turn (stable across updates)."
+      },
+      "type": {
+        "type": "string",
+        "description": "Discriminator for the item shape."
+      },
+      "op": {
+        "type": "string",
+        "enum": [
+          "upsert",
+          "final"
+        ],
+        "default": "upsert",
+        "description": "Item update operation. 'upsert' may be emitted multiple times; 'final' indicates no further updates expected."
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "inProgress",
+          "completed",
+          "failed",
+          "cancelled"
+        ],
+        "description": "Lifecycle status for the item. Items may stream inProgress and later be completed/failed/cancelled."
+      },
+      "created_at": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "updated_at": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "seq": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Monotonic sequence number for item updates within a turn."
+      },
+      "parent_id": {
+        "type": "string",
+        "description": "Optional parent item id (e.g., reasoning attached to an agentMessage)."
+      },
+      "metadata": {
+        "type": "object",
+        "description": "Opaque metadata for UI rendering and debugging.",
+        "additionalProperties": true
+      }
+    },
+    "semantics": {
+      "append_only": true,
+      "upsert_model": "Items are keyed by (turn_id, item.id). Multiple upserts may occur; last-write-wins for overlapping fields; seq may be used to order updates.",
+      "redaction": "Item payloads MUST be safe to display to a user; do not log secrets or raw private chain-of-thought."
+    }
+  },
+  "types": {
+    "agentMessage": {
+      "description": "Human-readable assistant output intended for user display (may stream).",
+      "required_fields": [
+        "content"
+      ],
+      "optional_fields": [
+        "format",
+        "content_blocks",
+        "hidden",
+        "annotations"
+      ],
+      "lifecycle": {
+        "streamable": true,
+        "terminal_statuses": [
+          "completed",
+          "failed",
+          "cancelled"
+        ]
+      }
+    },
+    "reasoning": {
+      "description": "User-visible reasoning summary or step rationale (NOT private chain-of-thought).",
+      "required_fields": [
+        "summary"
+      ],
+      "optional_fields": [
+        "steps",
+        "references"
+      ],
+      "lifecycle": {
+        "streamable": true,
+        "terminal_statuses": [
+          "completed",
+          "failed",
+          "cancelled"
+        ]
+      }
+    },
+    "plan": {
+      "description": "Plan for the turn, represented as ordered steps with per-step statuses.",
+      "required_fields": [
+        "steps"
+      ],
+      "optional_fields": [
+        "explanation"
+      ],
+      "lifecycle": {
+        "streamable": true,
+        "terminal_statuses": [
+          "completed",
+          "failed",
+          "cancelled"
+        ]
+      }
+    },
+    "commandExecution": {
+      "description": "Execution of a shell command (or equivalent) performed by the agent runtime.",
+      "required_fields": [
+        "command"
+      ],
+      "optional_fields": [
+        "cwd",
+        "shell",
+        "env",
+        "stdin",
+        "stdout",
+        "stderr",
+        "aggregatedOutput",
+        "exitCode",
+        "durationMs",
+        "classification",
+        "approvalRequestId"
+      ],
+      "lifecycle": {
+        "streamable": true,
+        "terminal_statuses": [
+          "completed",
+          "failed",
+          "cancelled"
+        ]
+      }
+    },
+    "fileChange": {
+      "description": "Proposed or applied file changes, usually represented as one or more unified diffs.",
+      "required_fields": [
+        "changes"
+      ],
+      "optional_fields": [
+        "patchId",
+        "grantRoot",
+        "approvalRequestId",
+        "summary"
+      ],
+      "lifecycle": {
+        "streamable": true,
+        "terminal_statuses": [
+          "completed",
+          "failed",
+          "cancelled"
+        ]
+      }
+    },
+    "mcpToolCall": {
+      "description": "A call to an MCP-style tool server, including structured arguments and result.",
+      "required_fields": [
+        "server",
+        "tool"
+      ],
+      "optional_fields": [
+        "arguments",
+        "result",
+        "success",
+        "error",
+        "durationMs"
+      ],
+      "lifecycle": {
+        "streamable": false,
+        "terminal_statuses": [
+          "completed",
+          "failed"
+        ]
+      }
+    },
+    "turnDiff": {
+      "description": "Aggregate unified diff for the turn (may duplicate per-file changes).",
+      "required_fields": [
+        "unified_diff"
+      ],
+      "optional_fields": [
+        "cwd"
+      ],
+      "lifecycle": {
+        "streamable": true,
+        "terminal_statuses": [
+          "completed"
+        ]
+      }
+    },
+    "error": {
+      "description": "Non-fatal or fatal error surfaced to the UI; may indicate retry.",
+      "required_fields": [
+        "message"
+      ],
+      "optional_fields": [
+        "code",
+        "details",
+        "willRetry",
+        "recoverable"
+      ],
+      "lifecycle": {
+        "streamable": false,
+        "terminal_statuses": [
+          "completed"
+        ]
+      }
+    },
+    "agentModeChange": {
+      "description": "A change in agent mode (e.g., from 'explain' to 'act'), if supported.",
+      "required_fields": [
+        "from",
+        "to"
+      ],
+      "optional_fields": [
+        "reason"
+      ],
+      "lifecycle": {
+        "streamable": false,
+        "terminal_statuses": [
+          "completed"
+        ]
+      }
+    },
+    "remoteTaskCreated": {
+      "description": "A remote/cloud task was created, with an ID usable for follow-up.",
+      "required_fields": [
+        "taskId"
+      ],
+      "optional_fields": [
+        "provider",
+        "url"
+      ],
+      "lifecycle": {
+        "streamable": false,
+        "terminal_statuses": [
+          "completed"
+        ]
+      }
+    },
+    "turnStatus": {
+      "description": "Explicit status update for a turn (optional; may be redundant with turn.status).",
+      "required_fields": [
+        "status"
+      ],
+      "optional_fields": [
+        "message",
+        "error"
+      ],
+      "lifecycle": {
+        "streamable": true,
+        "terminal_statuses": [
+          "completed",
+          "failed",
+          "cancelled"
+        ]
+      }
+    }
+  }
+}

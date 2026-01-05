@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/schemas/transaction_meta_v0.json",
+  "title": "Transaction Metadata v0",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "version",
+    "transaction_id",
+    "created_at",
+    "updated_at",
+    "status",
+    "workspace_roots",
+    "cwd",
+    "sandbox_policy",
+    "approval_policy"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "0"
+    },
+    "transaction_id": {
+      "type": "string",
+      "description": "Opaque transaction identifier. Recommended: ULID or UUIDv7.",
+      "minLength": 8,
+      "maxLength": 128
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "created",
+        "in_progress",
+        "awaiting_approval",
+        "proposed",
+        "applied",
+        "conflicted",
+        "completed",
+        "failed",
+        "interrupted"
+      ]
+    },
+    "workspace_roots": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "cwd": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sandbox_policy": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "read-only",
+            "workspace-write",
+            "full/danger",
+            "full-danger"
+          ]
+        },
+        "writable_roots": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "network_access": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "approval_policy": {
+      "type": "string",
+      "description": "Policy controlling when the system must ask for approval.",
+      "enum": [
+        "untrusted",
+        "on-request",
+        "on-failure",
+        "never"
+      ]
+    },
+    "active_thread_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 128
+    },
+    "current_turn_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 128
+    },
+    "labels": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string"
+    },
+    "pointers": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "events_jsonl": {
+          "type": "string"
+        },
+        "latest_diff": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "latest_turn": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,896 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "turn_item_schema_v0.1.json",
+  "title": "Turn Item Schema v0.1",
+  "type": "object",
+  "required": [
+    "id",
+    "type"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "op": {
+      "type": "string",
+      "enum": [
+        "upsert",
+        "final"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "inProgress",
+        "completed",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "seq": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "parent_id": {
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "allOf": [
+    {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "id",
+            "type",
+            "content"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "type": {
+              "const": "agentMessage"
+            },
+            "op": {
+              "type": "string",
+              "enum": [
+                "upsert",
+                "final"
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "inProgress",
+                "completed",
+                "failed",
+                "cancelled"
+              ]
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "seq": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "parent_id": {
+              "type": "string"
+            },
+            "metadata": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "content": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string",
+              "enum": [
+                "text",
+                "markdown",
+                "json"
+              ]
+            },
+            "content_blocks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            },
+            "hidden": {
+              "type": "boolean"
+            },
+            "annotations": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          },
+          "additionalProperties": true
+        },
+        {
+          "type": "object",
+          "required": [
+            "id",
+            "type",
+            "summary"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "type": {
+              "const": "reasoning"
+            },
+            "op": {
+              "type": "string",
+              "enum": [
+                "upsert",
+                "final"
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "inProgress",
+                "completed",
+                "failed",
+                "cancelled"
+              ]
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "seq": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "parent_id": {
+              "type": "string"
+            },
+            "metadata": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "summary": {
+              "type": "string"
+            },
+            "steps": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "references": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          },
+          "additionalProperties": true
+        },
+        {
+          "type": "object",
+          "required": [
+            "id",
+            "type",
+            "steps"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "type": {
+              "const": "plan"
+            },
+            "op": {
+              "type": "string",
+              "enum": [
+                "upsert",
+                "final"
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "inProgress",
+                "completed",
+                "failed",
+                "cancelled"
+              ]
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "seq": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "parent_id": {
+              "type": "string"
+            },
+            "metadata": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "explanation": {
+              "type": "string"
+            },
+            "steps": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "title",
+                  "status"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "inProgress",
+                      "completed",
+                      "skipped",
+                      "failed"
+                    ]
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          },
+          "additionalProperties": true
+        },
+        {
+          "type": "object",
+          "required": [
+            "id",
+            "type",
+            "command"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "type": {
+              "const": "commandExecution"
+            },
+            "op": {
+              "type": "string",
+              "enum": [
+                "upsert",
+                "final"
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "inProgress",
+                "completed",
+                "failed",
+                "cancelled"
+              ]
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "seq": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "parent_id": {
+              "type": "string"
+            },
+            "metadata": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "command": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 1
+                }
+              ]
+            },
+            "cwd": {
+              "type": "string"
+            },
+            "shell": {
+              "type": "string"
+            },
+            "env": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "stdin": {
+              "type": "string"
+            },
+            "stdout": {
+              "type": "string"
+            },
+            "stderr": {
+              "type": "string"
+            },
+            "aggregatedOutput": {
+              "type": "string"
+            },
+            "exitCode": {
+              "type": "integer"
+            },
+            "durationMs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "classification": {
+              "type": "string"
+            },
+            "approvalRequestId": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": true
+        },
+        {
+          "type": "object",
+          "required": [
+            "id",
+            "type",
+            "changes"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "type": {
+              "const": "fileChange"
+            },
+            "op": {
+              "type": "string",
+              "enum": [
+                "upsert",
+                "final"
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "inProgress",
+                "completed",
+                "failed",
+                "cancelled"
+              ]
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "seq": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "parent_id": {
+              "type": "string"
+            },
+            "metadata": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "patchId": {
+              "type": "string"
+            },
+            "grantRoot": {
+              "type": "string"
+            },
+            "approvalRequestId": {
+              "type": "string"
+            },
+            "summary": {
+              "type": "string"
+            },
+            "changes": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": [
+                  "path",
+                  "kind"
+                ],
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "add",
+                      "delete",
+                      "update",
+                      "rename"
+                    ]
+                  },
+                  "unified_diff": {
+                    "type": "string"
+                  },
+                  "move_path": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": true
+              }
+            }
+          },
+          "additionalProperties": true
+        },
+        {
+          "type": "object",
+          "required": [
+            "id",
+            "type",
+            "server",
+            "tool"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "type": {
+              "const": "mcpToolCall"
+            },
+            "op": {
+              "type": "string",
+              "enum": [
+                "upsert",
+                "final"
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "inProgress",
+                "completed",
+                "failed",
+                "cancelled"
+              ]
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "seq": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "parent_id": {
+              "type": "string"
+            },
+            "metadata": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "server": {
+              "type": "string"
+            },
+            "tool": {
+              "type": "string"
+            },
+            "arguments": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "result": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "success": {
+              "type": "boolean"
+            },
+            "error": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "durationMs": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": true
+        },
+        {
+          "type": "object",
+          "required": [
+            "id",
+            "type",
+            "unified_diff"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "type": {
+              "const": "turnDiff"
+            },
+            "op": {
+              "type": "string",
+              "enum": [
+                "upsert",
+                "final"
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "inProgress",
+                "completed",
+                "failed",
+                "cancelled"
+              ]
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "seq": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "parent_id": {
+              "type": "string"
+            },
+            "metadata": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "unified_diff": {
+              "type": "string"
+            },
+            "cwd": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": true
+        },
+        {
+          "type": "object",
+          "required": [
+            "id",
+            "type",
+            "message"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "type": {
+              "const": "error"
+            },
+            "op": {
+              "type": "string",
+              "enum": [
+                "upsert",
+                "final"
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "inProgress",
+                "completed",
+                "failed",
+                "cancelled"
+              ]
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "seq": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "parent_id": {
+              "type": "string"
+            },
+            "metadata": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "code": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            },
+            "details": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "willRetry": {
+              "type": "boolean"
+            },
+            "recoverable": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": true
+        },
+        {
+          "type": "object",
+          "required": [
+            "id",
+            "type",
+            "from",
+            "to"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "type": {
+              "const": "agentModeChange"
+            },
+            "op": {
+              "type": "string",
+              "enum": [
+                "upsert",
+                "final"
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "inProgress",
+                "completed",
+                "failed",
+                "cancelled"
+              ]
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "seq": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "parent_id": {
+              "type": "string"
+            },
+            "metadata": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "from": {
+              "type": "string"
+            },
+            "to": {
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": true
+        },
+        {
+          "type": "object",
+          "required": [
+            "id",
+            "type",
+            "taskId"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "type": {
+              "const": "remoteTaskCreated"
+            },
+            "op": {
+              "type": "string",
+              "enum": [
+                "upsert",
+                "final"
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "inProgress",
+                "completed",
+                "failed",
+                "cancelled"
+              ]
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "seq": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "parent_id": {
+              "type": "string"
+            },
+            "metadata": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "taskId": {
+              "type": "string"
+            },
+            "provider": {
+              "type": "string"
+            },
+            "url": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": true
+        },
+        {
+          "type": "object",
+          "required": [
+            "id",
+            "type",
+            "status"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "type": {
+              "const": "turnStatus"
+            },
+            "op": {
+              "type": "string",
+              "enum": [
+                "upsert",
+                "final"
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "inProgress",
+                "completed",
+                "failed",
+                "cancelled",
+                "interrupted"
+              ]
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "seq": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "parent_id": {
+              "type": "string"
+            },
+            "metadata": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "message": {
+              "type": "string"
+            },
+            "error": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": true
+        }
+      ]
+    }
+  ],
+  "additionalProperties": true
+}
