@@ -44,8 +44,8 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Deploy specific content directories instead of entire repository
-          # Adjust path to match your documentation/static content location
+          # Deploying entire repository as static content
+          # To deploy specific directories, update path (e.g., 'docs/' or 'public/')
           path: '.'
       
       - name: Deploy to GitHub Pages
