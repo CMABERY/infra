@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infra - Codex-Like MVP Project</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Codex-Like MVP Project</h1>
+    
+    <p>This project contains a minimal <strong>transaction-first</strong> coding agent kernel.</p>
+    
+    <h2>Features</h2>
+    <ul>
+        <li>JSON-RPC-ish transport over stdio (NDJSON)</li>
+        <li>Typed turn/item stream</li>
+        <li>Approval gating for commands + file changes</li>
+        <li>Patch proposal + apply</li>
+        <li>Append-only ledger</li>
+        <li>Multi-file patchsets</li>
+        <li>Tool-call provenance artifacts</li>
+        <li>Invariants validator</li>
+    </ul>
+    
+    <h2>Quick Start</h2>
+    <pre><code>python -m codex_like_mvp.client.mvp_cli demo</code></pre>
+    
+    <h2>Documentation</h2>
+    <p>For full documentation, please visit the <a href="https://github.com/CMABERY/infra">GitHub repository</a>.</p>
+</body>
+</html>

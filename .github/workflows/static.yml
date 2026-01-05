@@ -1,5 +1,5 @@
 # GitHub Pages Deployment Workflow
-# Deploys documentation and static content to GitHub Pages with security and efficiency best practices
+# Deploys static documentation from docs/ directory to GitHub Pages
 name: Deploy to GitHub Pages
 
 on:
@@ -44,9 +44,8 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Deploying entire repository as static content
-          # To deploy specific directories, update path (e.g., 'docs/' or 'public/')
-          path: '.'
+          # Deploy only the docs/ directory containing static content
+          path: 'docs/'
       
       - name: Deploy to GitHub Pages
         id: deployment
