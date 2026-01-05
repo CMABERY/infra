@@ -1,0 +1,52 @@
+# GitHub Pages Deployment Workflow
+# Deploys static documentation from docs/ directory to GitHub Pages
+name: Deploy to GitHub Pages
+
+on:
+  # Trigger on pushes to main branch for automatic deployment
+  push:
+    branches: ["main"]
+  
+  # Enable manual workflow dispatch for flexibility
+  workflow_dispatch:
+
+# Minimum required permissions following principle of least privilege
+permissions:
+  contents: read      # Read repository contents
+  pages: write        # Deploy to GitHub Pages
+  id-token: write     # OIDC token for secure deployments
+
+# Prevent concurrent deployments to avoid conflicts
+# Allow one deployment at a time, queue subsequent runs
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to GitHub Pages
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Shallow clone for faster checkout
+          fetch-depth: 1
+      
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Deploy only the docs/ directory containing static content
+          path: 'docs/'
+      
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
